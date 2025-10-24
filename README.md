@@ -1,7 +1,5 @@
 # 🏥 MedChat - Medical AI Assistant
 
-**Production-Ready Medical Chatbot with Sub-2-Second Response Times**
-
 A full-stack medical chatbot application with **optimized Python Flask backend** and React frontend, powered by **Perplexity AI** with **vector embeddings** for intelligent semantic search.
 
 ## 🎯 Key Achievements
