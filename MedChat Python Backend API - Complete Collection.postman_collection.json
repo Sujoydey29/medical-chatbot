@@ -1,0 +1,999 @@
+{
+	"info": {
+		"_postman_id": "3bafc71d-e776-40fd-ab2c-21a1e22fecdc",
+		"name": "MedChat Python Backend API - Complete Collection",
+		"description": "Comprehensive Postman collection for testing the migrated Python Flask backend with all optimizations.\n\n## Features Tested:\n- ✅ Authentication (Local email/password + Firebase-compatible backend)\n- ✅ Conversation Management (CRUD operations)\n- ✅ Chat with AI (Optimized for 1-2s response with citations)\n- ✅ Patient Memory (Vector-based medical entity storage)\n- ✅ User Profile (Get/Update user information)\n- ✅ User Preferences (AI personalization settings)\n- ✅ Vector Embeddings (384d local model, integrated in chat/memory)\n\n## How to Use:\n1. Import this collection into Postman\n2. Backend must be running: python app.py\n3. Run requests in order (Auth → Conversation → Chat)\n4. CONVERSATION_ID is auto-saved after creating conversation\n5. All tests include automatic validation\n\n## Notes:\n- Firebase Auth: Backend supports it (tested via local auth flow)\n- Vector Search: Integrated in chat system (not separate endpoint)\n- Patient Memory: Empty for new users (populates with medical conversations)\n\nCreated for: Aneesh (Manager)\nTested by: Sujoy\nDate: 2025-10-24",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30912834"
+	},
+	"item": [
+		{
+			"name": "1. Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has status and message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.status).to.equal('ok');",
+									"});",
+									"",
+									"pm.test(\"Backend is running\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('MedChat');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/health",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "Check if the backend server is running and healthy."
+					},
+					"response": []
+				}
+			],
+			"description": "Basic health check endpoint to verify backend is running."
+		},
+		{
+			"name": "2. Authentication",
+			"item": [
+				{
+					"name": "Register New User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 (Created)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has user ID and email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"});",
+									"",
+									"pm.test(\"Session cookie is set\", function () {",
+									"    pm.expect(pm.cookies.has('medchat-session')).to.be.true;",
+									"});",
+									"",
+									"// Save user ID for later use",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('USER_ID', jsonData.id);",
+									"    console.log('✅ User registered successfully:', jsonData.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"testuser@medchat.com\",\n    \"password\": \"SecurePassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/register",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user with email and password. Session cookie is automatically set."
+					},
+					"response": []
+				},
+				{
+					"name": "Login with Email/Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"});",
+									"",
+									"pm.test(\"Session cookie is set\", function () {",
+									"    pm.expect(pm.cookies.has('medchat-session')).to.be.true;",
+									"});",
+									"",
+									"// Save user ID",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('USER_ID', jsonData.id);",
+									"    console.log('✅ Login successful for:', jsonData.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"testuser@medchat.com\",\n    \"password\": \"SecurePassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with existing email/password credentials."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User (/me)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User is authenticated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.not.be.null;",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"    pm.expect(jsonData).to.have.property('role');",
+									"});",
+									"",
+									"pm.test(\"User has valid role\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.role).to.be.oneOf(['user', 'admin']);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/me",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Get currently logged-in user information."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Logout successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"console.log('✅ Logged out successfully');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/logout",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout current user and clear session cookie."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration, login, and session management."
+		},
+		{
+			"name": "3. Conversations",
+			"item": [
+				{
+					"name": "Create New Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 (Created)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has conversation data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('conversation');",
+									"    pm.expect(jsonData.conversation).to.have.property('id');",
+									"    pm.expect(jsonData.conversation).to.have.property('title');",
+									"});",
+									"",
+									"// Save conversation ID for later use",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('CONVERSATION_ID', jsonData.conversation.id);",
+									"    pm.environment.set('CONVERSATION_ID', jsonData.conversation.id);",
+									"    console.log('✅ Conversation created:', jsonData.conversation.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"My Medical Query\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/conversations",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"conversations"
+							]
+						},
+						"description": "Create a new conversation with optional title."
+					},
+					"response": []
+				},
+				{
+					"name": "List All Conversations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Conversations have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('id');",
+									"        pm.expect(jsonData[0]).to.have.property('title');",
+									"        pm.expect(jsonData[0]).to.have.property('createdAt');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/conversations",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"conversations"
+							]
+						},
+						"description": "Get all conversations for the authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conversation with Messages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has conversation and messages\", function () {",
+									"    if (pm.response.code === 200) {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('conversation');",
+									"        pm.expect(jsonData).to.have.property('messages');",
+									"        pm.expect(jsonData.messages).to.be.an('array');",
+									"    } else {",
+									"        console.log('⚠️ Conversation not found. Run \\\"Create New Conversation\\\" first!');",
+									"        pm.expect.fail('Conversation ID not valid. Create a conversation first.');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/conversations/{{CONVERSATION_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"conversations",
+								"{{CONVERSATION_ID}}"
+							]
+						},
+						"description": "Get a specific conversation with all its messages."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Conversation Title",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Update successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated: Diabetes Management Discussion\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/conversations/{{CONVERSATION_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"conversations",
+								"{{CONVERSATION_ID}}"
+							]
+						},
+						"description": "Update the title of an existing conversation."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Delete successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/conversations/{{CONVERSATION_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"conversations",
+								"{{CONVERSATION_ID}}"
+							]
+						},
+						"description": "Delete a conversation and all its messages."
+					},
+					"response": []
+				}
+			],
+			"description": "Conversation management endpoints."
+		},
+		{
+			"name": "4. Chat (AI Responses)",
+			"item": [
+				{
+					"name": "Send Message (Optimized)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has message content\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.have.property('content');",
+									"    pm.expect(jsonData.message.content).to.be.a('string');",
+									"    pm.expect(jsonData.message.content.length).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"Response has citations array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('citations');",
+									"});",
+									"",
+									"pm.test(\"Response has searchResults array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('searchResults');",
+									"});",
+									"",
+									"pm.test(\"PERFORMANCE: Response time under 3 seconds\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(3000);",
+									"});",
+									"",
+									"// Log performance",
+									"console.log('⚡ Response time:', pm.response.responseTime + 'ms');",
+									"console.log('✅ AI Response received with', pm.response.json().citations?.length || 0, 'citations');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"conversationId\": \"{{CONVERSATION_ID}}\",\n    \"message\": \"What are the symptoms of diabetes?\",\n    \"model\": \"sonar\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/chat/send",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"chat",
+								"send"
+							]
+						},
+						"description": "Send a message and get AI response with citations. Optimized for 1-2 second response time."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available AI Models",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array of models\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.above(0);",
+									"});",
+									"",
+									"pm.test(\"Models have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData[0]).to.have.property('id');",
+									"    pm.expect(jsonData[0]).to.have.property('name');",
+									"    pm.expect(jsonData[0]).to.have.property('category');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/chat/models",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"chat",
+								"models"
+							]
+						},
+						"description": "Get list of available AI models (sonar, sonar-pro, etc.)."
+					},
+					"response": []
+				}
+			],
+			"description": "Chat endpoints for AI-powered responses with citations."
+		},
+		{
+			"name": "5. Patient Memory",
+			"item": [
+				{
+					"name": "Get Patient Memory",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Memory entries have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0]).to.have.property('id');",
+									"        pm.expect(jsonData[0]).to.have.property('entityType');",
+									"        pm.expect(jsonData[0]).to.have.property('entityName');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/memory/patient",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"memory",
+								"patient"
+							]
+						},
+						"description": "Get all patient memory entries for the authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Specific Memory",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Delete successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/memory/patient/{{MEMORY_ID}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"memory",
+								"patient",
+								"{{MEMORY_ID}}"
+							]
+						},
+						"description": "Delete a specific patient memory entry."
+					},
+					"response": []
+				},
+				{
+					"name": "Clear All Patient Memory",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Clear successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"console.log('✅ All patient memory cleared');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/memory/patient/clear",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"memory",
+								"patient",
+								"clear"
+							]
+						},
+						"description": "Clear all patient memory for the authenticated user."
+					},
+					"response": []
+				}
+			],
+			"description": "Patient memory management endpoints."
+		},
+		{
+			"name": "6. User Profile",
+			"item": [
+				{
+					"name": "Get User Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Profile has user data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData) {",
+									"        pm.expect(jsonData).to.have.property('id');",
+									"        pm.expect(jsonData).to.have.property('name');",
+									"        pm.expect(jsonData).to.have.property('email');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/profile",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						},
+						"description": "Get user profile information."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Update successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"console.log('✅ Profile updated successfully');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"bio\": \"Software engineer interested in health tech\",\n    \"phone\": \"+1234567890\",\n    \"address\": \"123 Main St, City, State\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/profile",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						},
+						"description": "Update user profile information."
+					},
+					"response": []
+				}
+			],
+			"description": "User profile management endpoints."
+		},
+		{
+			"name": "7. User Preferences",
+			"item": [
+				{
+					"name": "Get User Preferences",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Preferences have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('preferredModel');",
+									"    pm.expect(jsonData).to.have.property('theme');",
+									"    pm.expect(jsonData).to.have.property('ageGroup');",
+									"    pm.expect(jsonData).to.have.property('responseStyle');",
+									"    pm.expect(jsonData).to.have.property('languageComplexity');",
+									"    pm.expect(jsonData).to.have.property('responseLength');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/api/preferences",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"preferences"
+							]
+						},
+						"description": "Get user AI preferences (age group, style, complexity, etc.)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Preferences",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Update successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});",
+									"",
+									"console.log('✅ Preferences updated successfully');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"preferredModel\": \"sonar\",\n    \"theme\": \"dark\",\n    \"ageGroup\": \"young\",\n    \"responseStyle\": \"simple\",\n    \"languageComplexity\": \"simple\",\n    \"includeMedicalTerms\": false,\n    \"responseLength\": \"concise\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/preferences",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"preferences"
+							]
+						},
+						"description": "Update user AI preferences for personalized responses."
+					},
+					"response": []
+				}
+			],
+			"description": "User preferences management for personalized AI responses."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('🚀 Request:', pm.info.requestName);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test(\"Response time is acceptable\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "CONVERSATION_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "USER_ID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "MEMORY_ID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

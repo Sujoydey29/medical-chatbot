@@ -1,0 +1,18 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Modern gradient background -->
+  <defs>
+    <linearGradient id="modernMed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="40" height="40" rx="10" fill="url(#modernMed)"/>
+  
+  <!-- Stylized 'M' with medical cross integrated -->
+  <path d="M10 28V12L15 20L20 12L25 20L30 12V28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Small cross accent -->
+  <rect x="18" y="26" width="1.5" height="6" rx="0.5" fill="white"/>
+  <rect x="16" y="28.5" width="6" height="1.5" rx="0.5" fill="white"/>
+</svg>

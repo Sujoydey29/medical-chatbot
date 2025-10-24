@@ -1,0 +1,31 @@
+# Web Framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.23
+pgvector==0.2.4
+
+# Authentication
+firebase-admin==6.3.0
+PyJWT==2.8.0
+
+# Perplexity API (OpenAI SDK)
+openai==1.6.1
+
+# FREE Embeddings (Sentence-Transformers)
+sentence-transformers==2.2.2
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# ID Generation
+nanoid==2.0.0
+
+# Validation
+pydantic==2.5.3
+
+# Password Hashing
+bcrypt==4.1.2
